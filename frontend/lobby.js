@@ -5,6 +5,9 @@ const els = {
   shareLink: document.getElementById("shareLink"),
   copyBtn: document.getElementById("copyBtn"),
   waBtn: document.getElementById("waBtn"),
+  lobbyChatLog: document.getElementById("lobbyChatLog"),
+  lobbyChatInput: document.getElementById("lobbyChatInput"),
+  lobbyChatSend: document.getElementById("lobbyChatSend"),
   lobbyCount: document.getElementById("lobbyCount"),
   playerList: document.getElementById("playerList"),
   startGameBtn: document.getElementById("startGameBtn"),
@@ -36,6 +39,23 @@ if (!roomId || !playerId) {
     return Boolean(me?.isHost);
   }
 
+  function renderChat() {
+    const log = els.lobbyChatLog;
+    if (!log) return;
+    const messages = room.lobbyChat || [];
+    if (!messages.length) {
+      log.innerHTML = '<p class="lobby-chat-empty subtle">No messages yet.</p>';
+      return;
+    }
+    log.innerHTML = messages
+      .map(
+        (m) =>
+          `<div class="lobby-chat-line"><span class="lobby-chat-name">${escapeHtml(m.name)}</span><span class="lobby-chat-text">${escapeHtml(m.text)}</span></div>`,
+      )
+      .join("");
+    log.scrollTop = log.scrollHeight;
+  }
+
   function renderLobby() {
     if (!room) return;
     if (room.status !== "lobby") {
@@ -62,6 +82,7 @@ if (!roomId || !playerId) {
     if (room.maxPlayers > 1) {
       els.shareLink.value = shareJoinLink(roomId);
     }
+    renderChat();
   }
 
   connectRoomWs(roomId, (r) => {
@@ -86,8 +107,40 @@ if (!roomId || !playerId) {
   els.startGameBtn.addEventListener("click", async () => {
     try {
       await api("/api/start-game", "POST", { room_id: roomId, player_id: playerId });
+      try {
+        room = await fetchRoom(roomId, playerId);
+        renderLobby();
+      } catch (_) {
+        /* WS / redirect will follow */
+      }
     } catch (error) {
       showFlash(error.message, true);
+    }
+  });
+
+  async function sendLobbyChat() {
+    const text = (els.lobbyChatInput?.value || "").trim();
+    if (!text) return;
+    try {
+      await api("/api/lobby-chat", "POST", {
+        room_id: roomId,
+        player_id: playerId,
+        text,
+      });
+      els.lobbyChatInput.value = "";
+      clearFlash();
+      room = await fetchRoom(roomId, playerId);
+      renderLobby();
+    } catch (error) {
+      showFlash(error.message, true);
+    }
+  }
+
+  els.lobbyChatSend?.addEventListener("click", sendLobbyChat);
+  els.lobbyChatInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void sendLobbyChat();
     }
   });
 }

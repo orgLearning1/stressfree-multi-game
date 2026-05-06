@@ -19,7 +19,59 @@ const els = {
   startNextRoundBtn: document.getElementById("startNextRoundBtn"),
   answerReveal: document.getElementById("answerReveal"),
   guesses: document.getElementById("guesses"),
+  gameChatLog: document.getElementById("gameChatLog"),
+  gameChatInput: document.getElementById("gameChatInput"),
+  gameChatSend: document.getElementById("gameChatSend"),
 };
+
+/** Keeps the guess row above the keyboard on mobile (visualViewport + scroll). */
+function installMobileKeyboardAssist() {
+  const guessInput = document.getElementById("guessInput");
+  const hangmanLetter = document.getElementById("hangmanLetter");
+  const gameChatInput = document.getElementById("gameChatInput");
+  const inputs = [guessInput, hangmanLetter, gameChatInput].filter(Boolean);
+  if (!inputs.length) return;
+
+  function scrollActiveFieldIntoView() {
+    const el = document.activeElement;
+    if (!el || !inputs.includes(el)) return;
+    const row = el.closest(".guess-entry");
+    const anchor = row || el;
+    anchor.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const rect = anchor.getBoundingClientRect();
+    const margin = 20;
+    const visibleBottom = vv.offsetTop + vv.height;
+    if (rect.bottom > visibleBottom - margin) {
+      const delta = rect.bottom - (visibleBottom - margin);
+      window.scrollBy({ top: delta, behavior: "smooth" });
+    }
+    if (rect.top < vv.offsetTop + margin) {
+      const delta = rect.top - (vv.offsetTop + margin);
+      window.scrollBy({ top: delta, behavior: "smooth" });
+    }
+  }
+
+  inputs.forEach((input) => {
+    input.addEventListener("focus", () => {
+      requestAnimationFrame(() => {
+        scrollActiveFieldIntoView();
+        setTimeout(scrollActiveFieldIntoView, 100);
+        setTimeout(scrollActiveFieldIntoView, 320);
+      });
+    });
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      if (inputs.includes(document.activeElement)) {
+        requestAnimationFrame(scrollActiveFieldIntoView);
+      }
+    });
+  }
+}
 
 function clearFlash() {
   els.status.textContent = "";
@@ -42,6 +94,8 @@ if (!roomId || !playerId) {
   els.hangmanBtn.disabled = true;
 } else {
   let room = null;
+  /** Tracks prior "my turn" while in_game so we only cue on transitions (not first paint). */
+  let lastMyTurnSignal = null;
 
   function isHost() {
     const me = room?.players?.find((p) => p.id === playerId);
@@ -50,6 +104,71 @@ if (!roomId || !playerId) {
 
   function isHangman() {
     return room?.gameMode === "hangman";
+  }
+
+  function playTurnPing() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.frequency.value = 880;
+      o.type = "sine";
+      g.gain.setValueAtTime(0.07, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime + 0.15);
+      setTimeout(() => ctx.close(), 400);
+    } catch (_) {
+      /* autoplay policy or unsupported */
+    }
+  }
+
+  function pulseTurnSpotlight() {
+    const wrap = isHangman()
+      ? document.getElementById("hangmanGuessEntry")
+      : document.getElementById("wordleGuessEntry");
+    if (!wrap) return;
+    wrap.classList.remove("turn-spotlight");
+    void wrap.offsetWidth;
+    wrap.classList.add("turn-spotlight");
+    wrap.addEventListener(
+      "animationend",
+      () => {
+        wrap.classList.remove("turn-spotlight");
+      },
+      { once: true },
+    );
+  }
+
+  function updateTurnCue(itsMyTurn) {
+    if (room.status !== "in_game") {
+      lastMyTurnSignal = null;
+      document.getElementById("wordleGuessEntry")?.classList.remove("turn-spotlight");
+      document.getElementById("hangmanGuessEntry")?.classList.remove("turn-spotlight");
+      return;
+    }
+    if (lastMyTurnSignal === null) {
+      lastMyTurnSignal = itsMyTurn;
+      return;
+    }
+    if (itsMyTurn && !lastMyTurnSignal) {
+      playTurnPing();
+      pulseTurnSpotlight();
+    }
+    lastMyTurnSignal = itsMyTurn;
+  }
+
+  async function syncRoomFromApi() {
+    try {
+      room = await fetchRoom(roomId, playerId);
+      renderGame();
+    } catch (e) {
+      showFlash(e.message, true);
+    }
   }
 
   /**
@@ -67,6 +186,23 @@ if (!roomId || !playerId) {
     if (!els.hangmanSvg || !els.hangmanFigure) return;
     els.hangmanSvg.querySelectorAll(".hangman-limb").forEach((n) => n.classList.remove("is-drawn"));
     els.hangmanFigure.classList.remove("hangman-figure--lost", "hangman-figure--saved", "hangman-figure--peril");
+  }
+
+  function renderGameChat() {
+    const log = els.gameChatLog;
+    if (!log) return;
+    const messages = room.lobbyChat || [];
+    if (!messages.length) {
+      log.innerHTML = '<p class="lobby-chat-empty subtle">No messages yet.</p>';
+      return;
+    }
+    log.innerHTML = messages
+      .map(
+        (m) =>
+          `<div class="lobby-chat-line"><span class="lobby-chat-name">${escapeHtml(m.name)}</span><span class="lobby-chat-text">${escapeHtml(m.text)}</span></div>`,
+      )
+      .join("");
+    log.scrollTop = log.scrollHeight;
   }
 
   function updateHangmanAnimation(hm, status) {
@@ -99,7 +235,6 @@ if (!roomId || !playerId) {
     els.pageTitle.textContent = hangman ? "Hangman" : "Wordle";
     els.wordlePanel.classList.toggle("hidden", hangman);
     els.hangmanPanel.classList.toggle("hidden", !hangman);
-    els.guesses.classList.toggle("hidden", hangman);
     if (!hangman) {
       resetHangmanVisual();
     }
@@ -107,6 +242,7 @@ if (!roomId || !playerId) {
     const turnPlayer = room.players.find((p) => p.id === room.currentTurnPlayerId);
     const timerPart =
       room.turnSeconds == null ? null : `${room.secondsRemaining ?? room.turnSeconds}s left`;
+    const itsMyTurn = room.status === "in_game" && room.currentTurnPlayerId === playerId;
 
     if (hangman) {
       const hm = room.hangman;
@@ -138,9 +274,8 @@ if (!roomId || !playerId) {
             : "";
         updateHangmanAnimation(hm, room.status);
       }
-      const myTurn = room.currentTurnPlayerId === playerId && room.status === "in_game";
-      els.hangmanBtn.disabled = !myTurn;
-      els.hangmanLetter.disabled = !myTurn;
+      els.hangmanBtn.disabled = !itsMyTurn;
+      els.hangmanLetter.disabled = !itsMyTurn;
     } else {
       els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, timerPart]
         .filter(Boolean)
@@ -171,15 +306,23 @@ if (!roomId || !playerId) {
         });
         els.guesses.appendChild(row);
       });
+      els.guesses.lastElementChild?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
 
-    const myTurnWordle = !hangman && room.currentTurnPlayerId === playerId && room.status === "in_game";
-    els.guessBtn.disabled = !myTurnWordle;
-    els.guessInput.disabled = !myTurnWordle;
+    els.guessBtn.disabled = !(!hangman && itsMyTurn);
+    els.guessInput.disabled = !(!hangman && itsMyTurn);
 
     els.nextGameBtn.disabled = !isHost();
     const shouldShowStartNext = isHost() && room.status === "round_revealed";
     els.startNextRoundBtn.classList.toggle("hidden", !shouldShowStartNext);
+
+    const wEl = document.getElementById("wordleGuessEntry");
+    const hEl = document.getElementById("hangmanGuessEntry");
+    if (wEl) wEl.classList.toggle("your-turn-active", !hangman && itsMyTurn);
+    if (hEl) hEl.classList.toggle("your-turn-active", hangman && itsMyTurn);
+
+    updateTurnCue(itsMyTurn);
+    renderGameChat();
   }
 
   connectRoomWs(roomId, (r) => {
@@ -208,6 +351,7 @@ if (!roomId || !playerId) {
       });
       els.guessInput.value = "";
       clearFlash();
+      void syncRoomFromApi();
     } catch (error) {
       showFlash(error.message, true);
     }
@@ -240,6 +384,7 @@ if (!roomId || !playerId) {
       });
       els.hangmanLetter.value = "";
       clearFlash();
+      void syncRoomFromApi();
     } catch (error) {
       showFlash(error.message, true);
     }
@@ -262,6 +407,7 @@ if (!roomId || !playerId) {
     try {
       await api("/api/next-game", "POST", { room_id: roomId, player_id: playerId });
       clearFlash();
+      void syncRoomFromApi();
     } catch (error) {
       showFlash(error.message, true);
     }
@@ -270,8 +416,39 @@ if (!roomId || !playerId) {
     try {
       await api("/api/start-next-round", "POST", { room_id: roomId, player_id: playerId });
       clearFlash();
+      void syncRoomFromApi();
     } catch (error) {
       showFlash(error.message, true);
     }
   });
+
+  async function sendGameChat() {
+    const text = (els.gameChatInput?.value || "").trim();
+    if (!text) return;
+    try {
+      await api("/api/lobby-chat", "POST", {
+        room_id: roomId,
+        player_id: playerId,
+        text,
+      });
+      els.gameChatInput.value = "";
+      clearFlash();
+      room = await fetchRoom(roomId, playerId);
+      renderGame();
+    } catch (error) {
+      showFlash(error.message, true);
+    }
+  }
+
+  els.gameChatSend?.addEventListener("click", () => {
+    void sendGameChat();
+  });
+  els.gameChatInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void sendGameChat();
+    }
+  });
+
+  installMobileKeyboardAssist();
 }

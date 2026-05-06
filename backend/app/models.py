@@ -48,6 +48,21 @@ class NextGameRequest(BaseModel):
     player_id: str
 
 
+class LobbyChatRequest(BaseModel):
+    room_id: str
+    player_id: str
+    text: str = Field(min_length=1, max_length=280)
+
+
+@dataclass
+class LobbyChatMessage:
+    id: str
+    player_id: str
+    name: str
+    text: str
+    created_at: datetime = field(default_factory=utc_now)
+
+
 @dataclass
 class PlayerState:
     id: str
@@ -99,4 +114,5 @@ class RoomState:
     status: str = "lobby"
     active_round: Optional[RoundState] = None
     hangman: Optional[HangmanRoundState] = None
+    lobby_chat: list[LobbyChatMessage] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)

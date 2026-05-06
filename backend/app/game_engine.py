@@ -9,7 +9,14 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from .models import GuessState, HangmanRoundState, PlayerState, RoomState, RoundState
+from .models import (
+    GuessState,
+    HangmanRoundState,
+    LobbyChatMessage,
+    PlayerState,
+    RoomState,
+    RoundState,
+)
 
 
 def utc_now() -> datetime:
@@ -239,6 +246,10 @@ class WordRepository:
         return guess in self.allowed
 
 
+_MAX_LOBBY_CHAT = 50
+_ROOM_CHAT_STATUSES = frozenset({"lobby", "in_game", "round_complete", "round_revealed"})
+
+
 class RoomService:
     def __init__(self, store: SQLiteStore, words: WordRepository) -> None:
         self._store = store
@@ -297,6 +308,27 @@ class RoomService:
             room.players.append(player)
             self._store.save_player(room_id, player)
             return player
+
+    def post_lobby_chat(self, room_id: str, player_id: str, text: str) -> None:
+        raw = (text or "").strip()
+        if not raw:
+            raise GameError("Message cannot be empty")
+        if len(raw) > 280:
+            raise GameError("Message too long")
+        with self._lock:
+            room = self.get_room(room_id)
+            if room.status not in _ROOM_CHAT_STATUSES:
+                raise GameError("Chat is not available right now")
+            author = self._find_player(room, player_id)
+            msg = LobbyChatMessage(
+                id=uuid4().hex[:12],
+                player_id=author.id,
+                name=author.name.strip()[:24] or "Player",
+                text=raw[:280],
+            )
+            room.lobby_chat.append(msg)
+            if len(room.lobby_chat) > _MAX_LOBBY_CHAT:
+                room.lobby_chat = room.lobby_chat[-_MAX_LOBBY_CHAT:]
 
     def _find_player(self, room: RoomState, player_id: str) -> PlayerState:
         for player in room.players:
@@ -555,6 +587,17 @@ class RoomService:
                     "answer": hm.answer.upper() if show_answer else None,
                 }
 
+        lobby_chat_payload: list[dict] = [
+            {
+                "id": m.id,
+                "playerId": m.player_id,
+                "name": m.name,
+                "text": m.text,
+                "at": m.created_at.isoformat(),
+            }
+            for m in room.lobby_chat[-_MAX_LOBBY_CHAT:]
+        ]
+
         return {
             "id": room.id,
             "gameMode": room.game_mode,
@@ -573,5 +616,6 @@ class RoomService:
             ],
             "activeRound": active_round_payload,
             "hangman": hangman_payload,
+            "lobbyChat": lobby_chat_payload,
             "viewerPlayerId": viewer_player_id,
         }

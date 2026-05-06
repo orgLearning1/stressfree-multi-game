@@ -14,6 +14,7 @@ from .models import (
     GuessRequest,
     HangmanLetterRequest,
     JoinRoomRequest,
+    LobbyChatRequest,
     NextGameRequest,
     StartGameRequest,
 )
@@ -203,6 +204,16 @@ async def create_room(request: CreateRoomRequest) -> dict:
         "shareUrl": f"/join.html?room={room.id}",
         "room": rooms.serialize_room(room, host.id),
     }
+
+
+@app.post("/api/lobby-chat")
+async def lobby_chat(request: LobbyChatRequest) -> dict:
+    try:
+        rooms.post_lobby_chat(request.room_id, request.player_id, request.text)
+    except GameError as error:
+        handle_game_error(error)
+    await publish_room(request.room_id)
+    return {"ok": True}
 
 
 @app.post("/api/join-room")

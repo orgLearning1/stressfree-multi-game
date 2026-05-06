@@ -71,6 +71,17 @@ function getRoomIdFromQuery() {
   return new URLSearchParams(window.location.search).get("room");
 }
 
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+
+async function fetchRoom(roomId, playerId) {
+  const data = await api(`/api/room/${roomId}?player_id=${encodeURIComponent(playerId)}`);
+  return data.room;
+}
+
 async function api(path, method = "GET", body = null, fetchInit = {}) {
   const url = buildUrl(path);
   let response;
@@ -112,19 +123,64 @@ async function api(path, method = "GET", body = null, fetchInit = {}) {
   return data;
 }
 
+let __wordleWsSession = 0;
+
+/**
+ * Subscribe to room updates. Reconnects automatically if the socket drops (common behind proxies).
+ * Opening a new subscription (e.g. navigating lobby → game) bumps the session so stale sockets
+ * do not schedule reconnects.
+ */
 function connectRoomWs(roomId, onRoomState) {
+  const session = ++__wordleWsSession;
+  const reconnectDelayMs = 1200;
+
   if (window.__wordleWs) {
-    window.__wordleWs.close();
-  }
-  const ws = new WebSocket(getWsUrl(roomId));
-  window.__wordleWs = ws;
-  ws.onmessage = (event) => {
-    const payload = JSON.parse(event.data);
-    if (payload.type === "room_state") {
-      onRoomState(payload.room);
+    try {
+      window.__wordleWs.onclose = null;
+      window.__wordleWs.close();
+    } catch (_) {
+      /* ignore */
     }
-  };
-  return ws;
+    window.__wordleWs = null;
+  }
+
+  function bind(ws) {
+    ws.onmessage = (event) => {
+      if (session !== __wordleWsSession) return;
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === "room_state") {
+          onRoomState(payload.room);
+        }
+      } catch (_) {
+        /* ignore malformed */
+      }
+    };
+    ws.onclose = () => {
+      if (session !== __wordleWsSession) return;
+      window.__wordleWs = null;
+      setTimeout(() => {
+        if (session !== __wordleWsSession) return;
+        open();
+      }, reconnectDelayMs);
+    };
+    ws.onerror = () => {
+      try {
+        ws.close();
+      } catch (_) {
+        /* ignore */
+      }
+    };
+  }
+
+  function open() {
+    if (session !== __wordleWsSession) return;
+    const ws = new WebSocket(getWsUrl(roomId));
+    window.__wordleWs = ws;
+    bind(ws);
+  }
+
+  open();
 }
 
 async function pingBackend(statusEl) {

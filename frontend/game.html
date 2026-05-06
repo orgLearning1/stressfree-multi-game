@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>Play</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
@@ -18,8 +21,9 @@
       <section class="card card--game">
         <div id="wordlePanel">
           <div id="winnerBanner" class="banner"></div>
-          <div class="guess-entry">
-            <input id="guessInput" type="text" maxlength="5" autocomplete="off" spellcheck="false" />
+          <div id="guesses" class="guess-history"></div>
+          <div class="guess-entry" id="wordleGuessEntry">
+            <input id="guessInput" type="text" maxlength="5" autocomplete="off" spellcheck="false" enterkeyhint="done" />
             <button type="button" id="guessBtn">Enter</button>
           </div>
         </div>
@@ -46,11 +50,27 @@
           <div id="hangmanMask" class="hangman-mask"></div>
           <p id="hangmanStrikes" class="meta-line"></p>
           <p id="hangmanLetters" class="subtle"></p>
-          <div class="guess-entry">
-            <input id="hangmanLetter" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
+          <div class="guess-entry" id="hangmanGuessEntry">
+            <input id="hangmanLetter" type="text" maxlength="1" autocomplete="off" spellcheck="false" enterkeyhint="done" />
             <button type="button" id="hangmanBtn">Letter</button>
           </div>
           <div id="hangmanBanner" class="banner"></div>
+        </div>
+
+        <div id="gameChatSection" class="game-chat-block">
+          <h3 class="game-chat-heading">Room chat</h3>
+          <div id="gameChatLog" class="lobby-chat-log game-chat-log" aria-live="polite" aria-relevant="additions"></div>
+          <div class="lobby-chat-compose">
+            <input
+              id="gameChatInput"
+              type="text"
+              maxlength="280"
+              autocomplete="off"
+              placeholder="Message…"
+              enterkeyhint="send"
+            />
+            <button type="button" id="gameChatSend">Send</button>
+          </div>
         </div>
 
         <div class="host-actions">
@@ -58,7 +78,6 @@
           <button type="button" id="startNextRoundBtn" class="hidden btn-secondary">Start next</button>
         </div>
         <div id="answerReveal" class="answer-reveal"></div>
-        <div id="guesses" class="guess-history"></div>
       </section>
     </main>
     <script src="./common.js"></script>

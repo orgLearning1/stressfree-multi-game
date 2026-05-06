@@ -26,12 +26,6 @@ function renderBoard(rows) {
     .join("");
 }
 
-function escapeHtml(s) {
-  const d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
-}
-
 window.addEventListener("pageshow", () => {
   void loadLeaderboard();
 });

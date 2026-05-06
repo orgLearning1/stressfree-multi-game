@@ -25,6 +25,22 @@
       </section>
 
       <section class="card">
+        <h2>Chat</h2>
+        <p class="subtle" style="margin-top: 0">Same thread continues on the game screen.</p>
+        <div id="lobbyChatLog" class="lobby-chat-log" aria-live="polite" aria-relevant="additions"></div>
+        <div class="lobby-chat-compose">
+          <input
+            id="lobbyChatInput"
+            type="text"
+            maxlength="280"
+            autocomplete="off"
+            placeholder="Say hi…"
+          />
+          <button type="button" id="lobbyChatSend">Send</button>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Players</h2>
         <p id="lobbyCount" class="subtle" style="margin-top: 0"></p>
         <ul id="playerList"></ul>
