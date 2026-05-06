@@ -11,7 +11,7 @@ Local-first multiplayer Wordle with a Python backend and static frontend.
 3. Open:
    - `http://127.0.0.1:8010/` (avoid `http://0.0.0.0:8010/` in the browser; that host often breaks API calls)
 
-Default API port is **8010** (`PORT` in the Makefile, and `API_PORT` in `frontend/app.js`). Override the server with `make backend PORT=9000` — if you use split UI on 5173, set `window.WORDLE_API_PORT = "9000"` before loading `app.js`, or edit `API_PORT` in `frontend/app.js` to match.
+Default API port is **8010** (`PORT` in the Makefile, and `API_PORT` in `frontend/common.js`). Override the server with `make backend PORT=9000` — if you use split UI on 5173, set `window.WORDLE_API_PORT = "9000"` before loading scripts, or edit `API_PORT` in `frontend/common.js` to match.
 
 ### Troubleshooting
 
