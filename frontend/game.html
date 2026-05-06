@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Play</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <h1 class="app-title" id="pageTitle">Play</h1>
+        <a class="link-quiet" href="./index.html">Home</a>
+      </header>
+      <p id="metaLine" class="meta-line"></p>
+      <p id="statusMessage" class="flash" role="alert" hidden></p>
+
+      <section class="card card--game">
+        <div id="wordlePanel">
+          <div id="winnerBanner" class="banner"></div>
+          <div class="guess-entry">
+            <input id="guessInput" type="text" maxlength="5" autocomplete="off" spellcheck="false" />
+            <button type="button" id="guessBtn">Enter</button>
+          </div>
+        </div>
+
+        <div id="hangmanPanel" class="hidden">
+          <div id="hangmanFigure" class="hangman-figure" aria-hidden="true">
+            <svg id="hangmanSvg" class="hangman-svg" viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
+              <g class="hangman-gallows" stroke="#5c6e7a" stroke-width="4" fill="none" stroke-linecap="round">
+                <line x1="30" y1="258" x2="210" y2="258" />
+                <line x1="55" y1="258" x2="55" y2="38" />
+                <line x1="55" y1="38" x2="155" y2="38" />
+                <line x1="155" y1="38" x2="155" y2="68" />
+              </g>
+              <g class="hangman-person" stroke="#e7e9ea" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle class="hangman-limb" data-limb="1" cx="155" cy="92" r="22" />
+                <line class="hangman-limb" data-limb="2" x1="155" y1="114" x2="155" y2="178" />
+                <line class="hangman-limb" data-limb="3" x1="155" y1="132" x2="105" y2="162" />
+                <line class="hangman-limb" data-limb="4" x1="155" y1="132" x2="205" y2="162" />
+                <line class="hangman-limb" data-limb="5" x1="155" y1="178" x2="115" y2="238" />
+                <line class="hangman-limb" data-limb="6" x1="155" y1="178" x2="195" y2="238" />
+              </g>
+            </svg>
+          </div>
+          <div id="hangmanMask" class="hangman-mask"></div>
+          <p id="hangmanStrikes" class="meta-line"></p>
+          <p id="hangmanLetters" class="subtle"></p>
+          <div class="guess-entry">
+            <input id="hangmanLetter" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
+            <button type="button" id="hangmanBtn">Letter</button>
+          </div>
+          <div id="hangmanBanner" class="banner"></div>
+        </div>
+
+        <div class="host-actions">
+          <button type="button" id="nextGameBtn" class="btn-secondary">Next round</button>
+          <button type="button" id="startNextRoundBtn" class="hidden btn-secondary">Start next</button>
+        </div>
+        <div id="answerReveal" class="answer-reveal"></div>
+        <div id="guesses" class="guess-history"></div>
+      </section>
+    </main>
+    <script src="./common.js"></script>
+    <script src="./game.js"></script>
+  </body>
+</html>

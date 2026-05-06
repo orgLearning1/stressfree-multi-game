@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word games</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <h1 class="app-title">New game</h1>
+      </header>
+      <details class="help-fold">
+        <summary>Local server</summary>
+        <p class="hint">
+          Run <code>make backend</code>, open this app on port <strong>8010</strong>. Use <code>127.0.0.1</code>, not
+          <code>0.0.0.0</code>.
+        </p>
+      </details>
+      <p id="statusMessage" class="flash" hidden></p>
+
+      <section class="card">
+        <h3>Game</h3>
+        <div class="mode-row" role="radiogroup" aria-label="Game type">
+          <label class="mode-option">
+            <input type="radio" name="gameMode" value="wordle" checked />
+            <span>Wordle</span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="gameMode" value="hangman" />
+            <span>Hangman</span>
+          </label>
+        </div>
+        <p class="subtle mode-desc" id="modeDesc">Competitive: take turns guessing five-letter words.</p>
+
+        <label>
+          Your name
+          <input id="createName" type="text" maxlength="24" autocomplete="name" />
+        </label>
+        <label>
+          Players
+          <input id="maxPlayers" type="number" min="1" max="8" value="2" />
+        </label>
+        <h3>Turn timer</h3>
+        <div id="timeButtons" class="buttonRow">
+          <button type="button" data-seconds="10" class="timeBtn">10s</button>
+          <button type="button" data-seconds="30" class="timeBtn active">30s</button>
+          <button type="button" data-seconds="60" class="timeBtn">1m</button>
+          <button type="button" data-seconds="120" class="timeBtn">2m</button>
+          <button type="button" data-seconds="300" class="timeBtn">5m</button>
+          <button type="button" data-seconds="infinite" class="timeBtn">∞</button>
+        </div>
+        <div class="buttonRow" style="margin-top: 0.75rem">
+          <button type="button" id="createGameBtn">Create</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Leaderboard</h3>
+        <p class="subtle">Wins / losses by name (local database).</p>
+        <div class="leaderboard-grid">
+          <div>
+            <h4 class="lb-title">Wordle</h4>
+            <table class="lb-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Record</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardWordle"></tbody>
+            </table>
+          </div>
+          <div>
+            <h4 class="lb-title">Hangman</h4>
+            <table class="lb-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Record</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardHangman"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="./common.js"></script>
+    <script>
+      (function () {
+        const room = new URLSearchParams(location.search).get("room");
+        if (room) {
+          location.replace(`${pageUrl("join.html")}?room=${encodeURIComponent(room)}`);
+        }
+      })();
+    </script>
+    <script src="./create.js"></script>
+    <script src="./leaderboard.js"></script>
+  </body>
+</html>

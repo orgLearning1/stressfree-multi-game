@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle — Join</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <h1 class="app-title">Join</h1>
+        <a class="link-quiet" href="./index.html">Create</a>
+      </header>
+      <p class="room-code">Room <strong id="roomLabel">—</strong></p>
+      <p id="statusMessage" class="flash" hidden></p>
+
+      <section class="card">
+        <label>
+          Your name
+          <input id="joinName" type="text" maxlength="24" autocomplete="name" />
+        </label>
+        <button type="button" id="joinBtn">Join</button>
+      </section>
+    </main>
+    <script src="./common.js"></script>
+    <script src="./join.js"></script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle — Lobby</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="app-header">
+        <h1 class="app-title">Lobby</h1>
+        <a class="link-quiet" href="./index.html">New game</a>
+      </header>
+      <p id="modeHint" class="subtle"></p>
+      <p id="statusMessage" class="flash" hidden></p>
+
+      <section id="shareSection" class="card hidden">
+        <h2>Invite</h2>
+        <input id="shareLink" class="invite-field" type="text" readonly />
+        <div class="buttonRow">
+          <button type="button" id="copyBtn" class="btn-secondary">Copy link</button>
+          <button type="button" id="waBtn" class="btn-secondary">WhatsApp</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Players</h2>
+        <p id="lobbyCount" class="subtle" style="margin-top: 0"></p>
+        <ul id="playerList"></ul>
+        <div class="buttonRow" style="margin-top: 0.75rem">
+          <button type="button" id="startGameBtn" class="hidden">Start</button>
+        </div>
+      </section>
+    </main>
+    <script src="./common.js"></script>
+    <script src="./lobby.js"></script>
+  </body>
+</html>
