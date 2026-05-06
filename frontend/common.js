@@ -71,7 +71,7 @@ function getRoomIdFromQuery() {
   return new URLSearchParams(window.location.search).get("room");
 }
 
-async function api(path, method = "GET", body = null) {
+async function api(path, method = "GET", body = null, fetchInit = {}) {
   const url = buildUrl(path);
   let response;
   try {
@@ -79,10 +79,15 @@ async function api(path, method = "GET", body = null) {
       method,
       headers: { "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
+      ...fetchInit,
     });
   } catch {
+    const localHint =
+      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
     throw new Error(
-      `Cannot reach the game API. Open http://127.0.0.1:${API_PORT}/ or run \`make backend\`.`,
+      localHint
+        ? `Cannot reach the game API. Open http://127.0.0.1:${API_PORT}/ or run \`make backend\`.`
+        : `Cannot reach the game API at ${buildUrl("")}.`,
     );
   }
   const text = await response.text();

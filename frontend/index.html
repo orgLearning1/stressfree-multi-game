@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Word games</title>
     <link rel="stylesheet" href="./style.css" />
+    <script>
+      (function () {
+        var h = location.hostname;
+        document.documentElement.dataset.env =
+          h === "localhost" || h === "127.0.0.1" ? "local" : "production";
+      })();
+    </script>
   </head>
   <body>
     <main class="container">
@@ -89,6 +96,9 @@
         </div>
       </section>
     </main>
+    <footer class="site-credit" role="contentinfo">
+      <p>Developed with love by Vibhash</p>
+    </footer>
     <script src="./common.js"></script>
     <script>
       (function () {

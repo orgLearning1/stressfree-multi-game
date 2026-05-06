@@ -3,12 +3,14 @@ async function loadLeaderboard() {
   const hangmanEl = document.getElementById("leaderboardHangman");
   if (!wordleEl || !hangmanEl) return;
   try {
-    const data = await api("/api/leaderboard");
+    const data = await api("/api/leaderboard", "GET", null, { cache: "no-store" });
     wordleEl.innerHTML = renderBoard(data.wordle || []);
     hangmanEl.innerHTML = renderBoard(data.hangman || []);
-  } catch {
-    wordleEl.innerHTML = "<tr><td colspan=\"3\">—</td></tr>";
-    hangmanEl.innerHTML = "<tr><td colspan=\"3\">—</td></tr>";
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Could not load leaderboard";
+    const row = `<tr><td colspan="3" class="lb-empty">${escapeHtml(msg)}</td></tr>`;
+    wordleEl.innerHTML = row;
+    hangmanEl.innerHTML = row;
   }
 }
 
@@ -30,4 +32,12 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
-void loadLeaderboard();
+window.addEventListener("pageshow", () => {
+  void loadLeaderboard();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    void loadLeaderboard();
+  }
+});

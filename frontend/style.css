@@ -146,6 +146,27 @@ button:disabled {
   color: #8b98a5;
 }
 
+html[data-env="production"] .help-fold {
+  display: none;
+}
+
+.site-credit {
+  display: none;
+  text-align: center;
+  padding: 1.5rem 1rem 2rem;
+  margin: 0;
+}
+
+.site-credit p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #71767b;
+}
+
+html[data-env="production"] .site-credit {
+  display: block;
+}
+
 .hint,
 .subtle {
   font-size: 0.8125rem;
