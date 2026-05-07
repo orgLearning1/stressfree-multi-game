@@ -22,9 +22,44 @@
         <div id="wordlePanel">
           <div id="winnerBanner" class="banner"></div>
           <div id="guesses" class="guess-history"></div>
-          <div class="guess-entry" id="wordleGuessEntry">
-            <input id="guessInput" type="text" maxlength="5" autocomplete="off" spellcheck="false" enterkeyhint="done" />
-            <button type="button" id="guessBtn">Enter</button>
+          <div class="wordle-composer" id="wordleComposer" aria-label="Wordle keyboard">
+            <div id="wordleDraft" class="wordle-draft" aria-live="polite"></div>
+            <div id="wordleKeyboard" class="wordle-keyboard">
+              <div class="wordle-keyboard-row">
+                <button type="button" class="wordle-key" data-key="q">Q</button>
+                <button type="button" class="wordle-key" data-key="w">W</button>
+                <button type="button" class="wordle-key" data-key="e">E</button>
+                <button type="button" class="wordle-key" data-key="r">R</button>
+                <button type="button" class="wordle-key" data-key="t">T</button>
+                <button type="button" class="wordle-key" data-key="y">Y</button>
+                <button type="button" class="wordle-key" data-key="u">U</button>
+                <button type="button" class="wordle-key" data-key="i">I</button>
+                <button type="button" class="wordle-key" data-key="o">O</button>
+                <button type="button" class="wordle-key" data-key="p">P</button>
+              </div>
+              <div class="wordle-keyboard-row">
+                <button type="button" class="wordle-key" data-key="a">A</button>
+                <button type="button" class="wordle-key" data-key="s">S</button>
+                <button type="button" class="wordle-key" data-key="d">D</button>
+                <button type="button" class="wordle-key" data-key="f">F</button>
+                <button type="button" class="wordle-key" data-key="g">G</button>
+                <button type="button" class="wordle-key" data-key="h">H</button>
+                <button type="button" class="wordle-key" data-key="j">J</button>
+                <button type="button" class="wordle-key" data-key="k">K</button>
+                <button type="button" class="wordle-key" data-key="l">L</button>
+              </div>
+              <div class="wordle-keyboard-row">
+                <button type="button" class="wordle-key wordle-key--action" data-key="enter">Enter</button>
+                <button type="button" class="wordle-key" data-key="z">Z</button>
+                <button type="button" class="wordle-key" data-key="x">X</button>
+                <button type="button" class="wordle-key" data-key="c">C</button>
+                <button type="button" class="wordle-key" data-key="v">V</button>
+                <button type="button" class="wordle-key" data-key="b">B</button>
+                <button type="button" class="wordle-key" data-key="n">N</button>
+                <button type="button" class="wordle-key" data-key="m">M</button>
+                <button type="button" class="wordle-key wordle-key--action" data-key="backspace">Back</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -80,6 +115,9 @@
         <div id="answerReveal" class="answer-reveal"></div>
       </section>
     </main>
+    <footer class="site-credit" role="contentinfo">
+      <p>Developed with love &#10084;&#65039; by Vibhash</p>
+    </footer>
     <script src="./common.js"></script>
     <script src="./game.js"></script>
   </body>

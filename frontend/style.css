@@ -151,7 +151,7 @@ html[data-env="production"] .help-fold {
 }
 
 .site-credit {
-  display: none;
+  display: block;
   text-align: center;
   padding: 1.5rem 1rem 2rem;
   margin: 0;
@@ -161,10 +161,6 @@ html[data-env="production"] .help-fold {
   margin: 0;
   font-size: 0.8125rem;
   color: #71767b;
-}
-
-html[data-env="production"] .site-credit {
-  display: block;
 }
 
 .hint,
@@ -243,6 +239,81 @@ html[data-env="production"] .site-credit {
   font-weight: 600;
 }
 
+.wordle-composer {
+  margin-bottom: 0.75rem;
+}
+
+.wordle-draft {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.wordle-draft-cell {
+  height: 42px;
+  border: 2px solid #38444d;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #e7e9ea;
+}
+
+.wordle-draft-cell.filled {
+  border-color: #8b98a5;
+}
+
+.wordle-keyboard {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.wordle-keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.28rem;
+}
+
+.wordle-key {
+  flex: 1 1 0;
+  max-width: 34px;
+  min-width: 30px;
+  border-radius: 6px;
+  padding: 0.55rem 0.2rem;
+  font-size: 0.76rem;
+  background: #38444d;
+  color: #fff;
+}
+
+.wordle-key--action {
+  max-width: none;
+  flex: 1.6 1 0;
+  font-size: 0.72rem;
+}
+
+.wordle-key--absent {
+  background: #2f3336;
+  color: #cfd9de;
+}
+
+.wordle-key--present {
+  background: #f7c948;
+  color: #0f1419;
+}
+
+.wordle-key--correct {
+  background: #00ba7c;
+  color: #0f1419;
+}
+
+.wordle-keyboard--disabled .wordle-key {
+  opacity: 0.5;
+}
+
 .guess-entry.your-turn-active {
   border-radius: 10px;
   box-shadow:
@@ -251,7 +322,19 @@ html[data-env="production"] .site-credit {
   transition: box-shadow 0.25s ease;
 }
 
+.wordle-composer.your-turn-active {
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 2px rgba(0, 186, 124, 0.55),
+    0 0 18px rgba(0, 186, 124, 0.22);
+  transition: box-shadow 0.25s ease;
+}
+
 .guess-entry.turn-spotlight {
+  animation: turn-spotlight-pulse 1.35s ease-out;
+}
+
+.wordle-composer.turn-spotlight {
   animation: turn-spotlight-pulse 1.35s ease-out;
 }
 
@@ -280,6 +363,10 @@ html[data-env="production"] .site-credit {
   margin-bottom: 0.75rem;
 }
 
+.card--game .host-actions {
+  margin-top: 1.35rem;
+}
+
 .answer-reveal {
   font-size: 0.875rem;
   font-weight: 600;
@@ -300,6 +387,11 @@ html[data-env="production"] .site-credit {
     overscroll-behavior: contain;
     margin-bottom: 0.35rem;
     padding-bottom: 0.15rem;
+  }
+  .wordle-key {
+    min-width: 28px;
+    max-width: 32px;
+    padding: 0.52rem 0.15rem;
   }
 }
 

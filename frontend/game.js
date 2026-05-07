@@ -5,8 +5,9 @@ const els = {
   wordlePanel: document.getElementById("wordlePanel"),
   hangmanPanel: document.getElementById("hangmanPanel"),
   winnerBanner: document.getElementById("winnerBanner"),
-  guessInput: document.getElementById("guessInput"),
-  guessBtn: document.getElementById("guessBtn"),
+  wordleComposer: document.getElementById("wordleComposer"),
+  wordleDraft: document.getElementById("wordleDraft"),
+  wordleKeyboard: document.getElementById("wordleKeyboard"),
   hangmanFigure: document.getElementById("hangmanFigure"),
   hangmanSvg: document.getElementById("hangmanSvg"),
   hangmanMask: document.getElementById("hangmanMask"),
@@ -26,10 +27,9 @@ const els = {
 
 /** Keeps the guess row above the keyboard on mobile (visualViewport + scroll). */
 function installMobileKeyboardAssist() {
-  const guessInput = document.getElementById("guessInput");
   const hangmanLetter = document.getElementById("hangmanLetter");
   const gameChatInput = document.getElementById("gameChatInput");
-  const inputs = [guessInput, hangmanLetter, gameChatInput].filter(Boolean);
+  const inputs = [hangmanLetter, gameChatInput].filter(Boolean);
   if (!inputs.length) return;
 
   function scrollActiveFieldIntoView() {
@@ -90,12 +90,64 @@ const playerId = roomId ? getPlayerId(roomId) : null;
 
 if (!roomId || !playerId) {
   showFlash("Start from Create or Join.", true);
-  els.guessBtn.disabled = true;
+  els.wordleKeyboard?.querySelectorAll(".wordle-key").forEach((btn) => {
+    btn.disabled = true;
+  });
   els.hangmanBtn.disabled = true;
 } else {
   let room = null;
+  let draftGuess = "";
   /** Tracks prior "my turn" while in_game so we only cue on transitions (not first paint). */
   let lastMyTurnSignal = null;
+
+  function renderWordleDraft() {
+    if (!els.wordleDraft) return;
+    const padded = draftGuess.padEnd(5, " ");
+    els.wordleDraft.innerHTML = "";
+    for (let i = 0; i < 5; i += 1) {
+      const cell = document.createElement("div");
+      cell.className = "wordle-draft-cell";
+      const ch = padded[i];
+      if (ch !== " ") {
+        cell.classList.add("filled");
+        cell.textContent = ch.toUpperCase();
+      }
+      els.wordleDraft.appendChild(cell);
+    }
+  }
+
+  function keyboardRank(mark) {
+    if (mark === "correct") return 3;
+    if (mark === "present") return 2;
+    return 1;
+  }
+
+  function renderWordleKeyboard(roundState, enabled) {
+    if (!els.wordleKeyboard) return;
+    const seen = {};
+    const guesses = roundState?.guesses || [];
+    guesses.forEach((entry) => {
+      entry.feedback.forEach((mark, idx) => {
+        const letter = entry.guess[idx];
+        if (!letter) return;
+        const rank = keyboardRank(mark);
+        seen[letter] = Math.max(seen[letter] || 0, rank);
+      });
+    });
+    els.wordleKeyboard
+      .querySelectorAll(".wordle-key")
+      .forEach((btn) => {
+        const key = btn.getAttribute("data-key");
+        if (!key) return;
+        btn.disabled = !enabled;
+        btn.classList.remove("wordle-key--absent", "wordle-key--present", "wordle-key--correct");
+        const rank = seen[key];
+        if (rank === 1) btn.classList.add("wordle-key--absent");
+        if (rank === 2) btn.classList.add("wordle-key--present");
+        if (rank === 3) btn.classList.add("wordle-key--correct");
+      });
+    els.wordleKeyboard.classList.toggle("wordle-keyboard--disabled", !enabled);
+  }
 
   function isHost() {
     const me = room?.players?.find((p) => p.id === playerId);
@@ -130,7 +182,7 @@ if (!roomId || !playerId) {
   function pulseTurnSpotlight() {
     const wrap = isHangman()
       ? document.getElementById("hangmanGuessEntry")
-      : document.getElementById("wordleGuessEntry");
+      : document.getElementById("wordleComposer");
     if (!wrap) return;
     wrap.classList.remove("turn-spotlight");
     void wrap.offsetWidth;
@@ -147,7 +199,7 @@ if (!roomId || !playerId) {
   function updateTurnCue(itsMyTurn) {
     if (room.status !== "in_game") {
       lastMyTurnSignal = null;
-      document.getElementById("wordleGuessEntry")?.classList.remove("turn-spotlight");
+      document.getElementById("wordleComposer")?.classList.remove("turn-spotlight");
       document.getElementById("hangmanGuessEntry")?.classList.remove("turn-spotlight");
       return;
     }
@@ -309,14 +361,14 @@ if (!roomId || !playerId) {
       els.guesses.lastElementChild?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
 
-    els.guessBtn.disabled = !(!hangman && itsMyTurn);
-    els.guessInput.disabled = !(!hangman && itsMyTurn);
+    renderWordleDraft();
+    renderWordleKeyboard(room.activeRound, !hangman && itsMyTurn);
 
     els.nextGameBtn.disabled = !isHost();
     const shouldShowStartNext = isHost() && room.status === "round_revealed";
     els.startNextRoundBtn.classList.toggle("hidden", !shouldShowStartNext);
 
-    const wEl = document.getElementById("wordleGuessEntry");
+    const wEl = document.getElementById("wordleComposer");
     const hEl = document.getElementById("hangmanGuessEntry");
     if (wEl) wEl.classList.toggle("your-turn-active", !hangman && itsMyTurn);
     if (hEl) hEl.classList.toggle("your-turn-active", hangman && itsMyTurn);
@@ -338,7 +390,7 @@ if (!roomId || !playerId) {
     .catch((e) => showFlash(e.message, true));
 
   async function submitWordle() {
-    const raw = els.guessInput.value.trim().toLowerCase();
+    const raw = draftGuess.trim().toLowerCase();
     if (raw.length !== 5) {
       showFlash("Enter five letters.", true);
       return;
@@ -349,24 +401,64 @@ if (!roomId || !playerId) {
         player_id: playerId,
         guess: raw,
       });
-      els.guessInput.value = "";
+      draftGuess = "";
       clearFlash();
+      renderWordleDraft();
       void syncRoomFromApi();
     } catch (error) {
       showFlash(error.message, true);
     }
   }
 
-  els.guessBtn.addEventListener("click", submitWordle);
-  els.guessInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      submitWordle();
+  function pushWordleLetter(letter) {
+    if (draftGuess.length >= 5) return;
+    draftGuess += letter;
+    renderWordleDraft();
+  }
+
+  function popWordleLetter() {
+    if (!draftGuess) return;
+    draftGuess = draftGuess.slice(0, -1);
+    renderWordleDraft();
+  }
+
+  async function handleWordleKey(key) {
+    if (!room || isHangman()) return;
+    const itsMyTurn = room.status === "in_game" && room.currentTurnPlayerId === playerId;
+    if (!itsMyTurn) return;
+    if (key === "enter") {
+      await submitWordle();
+      return;
     }
-  });
-  els.guessInput.addEventListener("input", () => {
+    if (key === "backspace") {
+      popWordleLetter();
+      return;
+    }
+    if (/^[a-z]$/.test(key)) {
+      pushWordleLetter(key);
+    }
     if (els.status.getAttribute("data-tone") === "error") {
       clearFlash();
+    }
+  }
+
+  els.wordleKeyboard?.addEventListener("click", (event) => {
+    const btn = event.target.closest(".wordle-key");
+    if (!btn) return;
+    const key = btn.getAttribute("data-key");
+    if (!key) return;
+    void handleWordleKey(key);
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (isHangman()) return;
+    if (document.activeElement === els.gameChatInput || document.activeElement === els.hangmanLetter) {
+      return;
+    }
+    const key = e.key.toLowerCase();
+    if (key === "enter" || key === "backspace" || /^[a-z]$/.test(key)) {
+      e.preventDefault();
+      void handleWordleKey(key);
     }
   });
 
