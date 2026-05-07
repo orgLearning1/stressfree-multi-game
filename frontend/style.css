@@ -295,6 +295,20 @@ html[data-env="production"] .help-fold {
   font-size: 0.72rem;
 }
 
+.wordle-key--backspace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+}
+
+.wordle-key-backspace-glyph {
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
 .wordle-key--absent {
   background: #2f3336;
   color: #cfd9de;
