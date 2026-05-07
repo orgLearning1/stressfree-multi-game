@@ -245,14 +245,16 @@ html[data-env="production"] .help-fold {
 
 .wordle-draft {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.4rem;
   margin-bottom: 0.6rem;
+  min-height: 3rem;
 }
 
 .wordle-draft-cell {
+  min-height: 42px;
   height: 42px;
-  border: 2px solid #38444d;
+  border: 2px solid #5c6e7a;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -261,10 +263,13 @@ html[data-env="production"] .help-fold {
   font-weight: 700;
   text-transform: uppercase;
   color: #e7e9ea;
+  background: rgba(231, 233, 234, 0.06);
+  box-sizing: border-box;
 }
 
 .wordle-draft-cell.filled {
   border-color: #8b98a5;
+  background: transparent;
 }
 
 .wordle-keyboard {
@@ -286,14 +291,19 @@ html[data-env="production"] .help-fold {
   max-width: 34px;
   min-width: 30px;
   min-height: 38px;
+  margin: 0;
   border-radius: 6px;
   padding: 0.55rem 0.2rem;
   font-size: 0.76rem;
+  font-family: inherit;
+  line-height: 1.1;
   background: #38444d;
   color: #fff;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0.12);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .wordle-key--action {
@@ -410,50 +420,60 @@ html[data-env="production"] .help-fold {
     padding-bottom: 0.15rem;
   }
 
-  .wordle-keyboard {
+  .wordle-draft {
     gap: 0.45rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .wordle-draft-cell {
+    min-height: 46px;
+    height: auto;
+    aspect-ratio: 1;
+    max-height: 58px;
+    border-width: 2px;
+    border-color: #6e7f8c;
+    font-size: 1.1rem;
+  }
+
+  .wordle-keyboard {
+    gap: 0.5rem;
     width: 100%;
     max-width: 100%;
   }
 
+  /* Flex rows avoid Chrome Android grid track sizing glitches on narrow screens */
   .wordle-keyboard-row {
-    display: grid;
-    gap: 5px;
-    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
     justify-content: stretch;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
   }
 
-  .wordle-keyboard-row:nth-child(1) {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-  }
-
-  .wordle-keyboard-row:nth-child(2) {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .wordle-keyboard-row:nth-child(3) {
-    grid-template-columns: minmax(2.75rem, 1fr) repeat(7, minmax(0, 1fr)) minmax(3.25rem, 1fr);
-  }
-
-  .wordle-key {
-    flex: unset;
+  .wordle-keyboard-row .wordle-key {
+    flex: 1 1 0;
     min-width: 0;
     max-width: none;
-    width: 100%;
-    min-height: 44px;
-    padding: 0.35rem 0.1rem;
-    font-size: clamp(0.68rem, 3.4vw, 0.82rem);
+    width: auto;
+    min-height: 46px;
+    padding: 0.4rem 0.12rem;
+    font-size: clamp(0.7rem, 2.9vw, 0.85rem);
   }
 
-  .wordle-key--action {
-    font-size: clamp(0.62rem, 3vw, 0.74rem);
-    padding-left: 0.2rem;
-    padding-right: 0.2rem;
+  .wordle-keyboard-row .wordle-key--action {
+    flex: 1.22 1 0;
+    min-width: 2.4rem;
+    font-size: clamp(0.62rem, 2.6vw, 0.78rem);
+    padding-left: 0.18rem;
+    padding-right: 0.18rem;
   }
 
-  .wordle-key--backspace {
-    padding-left: 0.15rem;
-    padding-right: 0.15rem;
+  .wordle-keyboard-row .wordle-key--backspace {
+    min-width: 2.35rem;
+    padding-left: 0.12rem;
+    padding-right: 0.12rem;
   }
 
   .wordle-key-backspace-glyph {

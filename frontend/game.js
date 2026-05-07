@@ -25,6 +25,12 @@ const els = {
   gameChatSend: document.getElementById("gameChatSend"),
 };
 
+function setDisabled(el, value) {
+  if (el != null && "disabled" in el) {
+    el.disabled = Boolean(value);
+  }
+}
+
 /** Keeps the guess row above the keyboard on mobile (visualViewport + scroll). */
 function installMobileKeyboardAssist() {
   const hangmanLetter = document.getElementById("hangmanLetter");
@@ -93,9 +99,9 @@ const playerId = roomId ? getPlayerId(roomId) : null;
 if (!roomId || !playerId) {
   showFlash("Start from Create or Join.", true);
   els.wordleKeyboard?.querySelectorAll(".wordle-key").forEach((btn) => {
-    btn.disabled = true;
+    setDisabled(btn, true);
   });
-  if (els.hangmanBtn) els.hangmanBtn.disabled = true;
+  setDisabled(els.hangmanBtn, true);
 } else {
   let room = null;
   let draftGuess = "";
@@ -118,6 +124,8 @@ if (!roomId || !playerId) {
     }
   }
 
+  renderWordleDraft();
+
   function keyboardRank(mark) {
     if (mark === "correct") return 3;
     if (mark === "present") return 2;
@@ -139,9 +147,10 @@ if (!roomId || !playerId) {
     els.wordleKeyboard
       .querySelectorAll(".wordle-key")
       .forEach((btn) => {
+        if (!(btn instanceof HTMLButtonElement)) return;
         const key = btn.getAttribute("data-key");
         if (!key) return;
-        btn.disabled = !enabled;
+        setDisabled(btn, !enabled);
         btn.classList.remove("wordle-key--absent", "wordle-key--present", "wordle-key--correct");
         const rank = seen[key];
         if (rank === 1) btn.classList.add("wordle-key--absent");
@@ -277,7 +286,10 @@ if (!roomId || !playerId) {
   }
 
   function renderGame() {
-    if (!room) return;
+    if (!room) {
+      renderWordleDraft();
+      return;
+    }
     if (room.status === "lobby") {
       window.location.href = `${pageUrl("lobby.html")}?room=${encodeURIComponent(roomId)}`;
       return;
@@ -331,8 +343,8 @@ if (!roomId || !playerId) {
               : "";
         updateHangmanAnimation(hm, room.status);
       }
-      if (els.hangmanBtn) els.hangmanBtn.disabled = !itsMyTurn;
-      if (els.hangmanLetter) els.hangmanLetter.disabled = !itsMyTurn;
+      setDisabled(els.hangmanBtn, !itsMyTurn);
+      setDisabled(els.hangmanLetter, !itsMyTurn);
     } else {
       if (els.metaLine)
         els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, timerPart]
@@ -373,7 +385,7 @@ if (!roomId || !playerId) {
     renderWordleDraft();
     renderWordleKeyboard(room.activeRound, !hangman && itsMyTurn);
 
-    if (els.nextGameBtn) els.nextGameBtn.disabled = !isHost();
+    setDisabled(els.nextGameBtn, !isHost());
     const shouldShowStartNext = isHost() && room.status === "round_revealed";
     els.startNextRoundBtn?.classList.toggle("hidden", !shouldShowStartNext);
 
