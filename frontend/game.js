@@ -74,12 +74,14 @@ function installMobileKeyboardAssist() {
 }
 
 function clearFlash() {
+  if (!els.status) return;
   els.status.textContent = "";
   els.status.hidden = true;
   els.status.removeAttribute("data-tone");
 }
 
 function showFlash(message, isError = false) {
+  if (!els.status) return;
   els.status.textContent = message;
   els.status.hidden = false;
   els.status.setAttribute("data-tone", isError ? "error" : "info");
@@ -93,7 +95,7 @@ if (!roomId || !playerId) {
   els.wordleKeyboard?.querySelectorAll(".wordle-key").forEach((btn) => {
     btn.disabled = true;
   });
-  els.hangmanBtn.disabled = true;
+  if (els.hangmanBtn) els.hangmanBtn.disabled = true;
 } else {
   let room = null;
   let draftGuess = "";
@@ -284,9 +286,9 @@ if (!roomId || !playerId) {
     clearFlash();
 
     const hangman = isHangman();
-    els.pageTitle.textContent = hangman ? "Hangman" : "Wordle";
-    els.wordlePanel.classList.toggle("hidden", hangman);
-    els.hangmanPanel.classList.toggle("hidden", !hangman);
+    if (els.pageTitle) els.pageTitle.textContent = hangman ? "Hangman" : "Wordle";
+    els.wordlePanel?.classList.toggle("hidden", hangman);
+    els.hangmanPanel?.classList.toggle("hidden", !hangman);
     if (!hangman) {
       resetHangmanVisual();
     }
@@ -302,71 +304,78 @@ if (!roomId || !playerId) {
         resetHangmanVisual();
       }
       if (hm) {
-        els.hangmanMask.textContent = hm.masked || "";
-        els.hangmanStrikes.textContent = `Wrong: ${hm.wrongCount} / ${hm.maxWrong}`;
-        els.hangmanLetters.textContent =
-          hm.guessedLetters?.length > 0 ? `Guessed: ${hm.guessedLetters.join(", ").toUpperCase()}` : "";
+        if (els.hangmanMask) els.hangmanMask.textContent = hm.masked || "";
+        if (els.hangmanStrikes) els.hangmanStrikes.textContent = `Wrong: ${hm.wrongCount} / ${hm.maxWrong}`;
+        if (els.hangmanLetters)
+          els.hangmanLetters.textContent =
+            hm.guessedLetters?.length > 0 ? `Guessed: ${hm.guessedLetters.join(", ").toUpperCase()}` : "";
         if (room.status === "in_game") {
-          els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, "Save the hangman", timerPart]
-            .filter(Boolean)
-            .join(" · ");
+          if (els.metaLine)
+            els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, "Save the hangman", timerPart]
+              .filter(Boolean)
+              .join(" · ");
         } else {
-          els.metaLine.textContent = "";
+          if (els.metaLine) els.metaLine.textContent = "";
         }
         if (room.status === "round_complete" && hm.outcome === "won") {
-          els.hangmanBanner.textContent = "You saved the hangman.";
+          if (els.hangmanBanner) els.hangmanBanner.textContent = "You saved the hangman.";
         } else if (room.status === "round_complete" && hm.outcome === "lost") {
-          els.hangmanBanner.textContent = "The hangman was lost.";
+          if (els.hangmanBanner) els.hangmanBanner.textContent = "The hangman was lost.";
         } else {
-          els.hangmanBanner.textContent = "";
+          if (els.hangmanBanner) els.hangmanBanner.textContent = "";
         }
-        els.answerReveal.textContent =
-          hm.answer && (room.status === "round_complete" || room.status === "round_revealed")
-            ? `Word was: ${hm.answer}`
-            : "";
+        if (els.answerReveal)
+          els.answerReveal.textContent =
+            hm.answer && (room.status === "round_complete" || room.status === "round_revealed")
+              ? `Word was: ${hm.answer}`
+              : "";
         updateHangmanAnimation(hm, room.status);
       }
-      els.hangmanBtn.disabled = !itsMyTurn;
-      els.hangmanLetter.disabled = !itsMyTurn;
+      if (els.hangmanBtn) els.hangmanBtn.disabled = !itsMyTurn;
+      if (els.hangmanLetter) els.hangmanLetter.disabled = !itsMyTurn;
     } else {
-      els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, timerPart]
-        .filter(Boolean)
-        .join(" · ");
+      if (els.metaLine)
+        els.metaLine.textContent = [turnPlayer ? `${turnPlayer.name}'s turn` : null, timerPart]
+          .filter(Boolean)
+          .join(" · ");
       const winner = room.activeRound?.winnerId
         ? room.players.find((p) => p.id === room.activeRound.winnerId)
         : null;
-      els.winnerBanner.textContent = winner ? `${winner.name} got it` : "";
-      els.answerReveal.textContent =
-        room.activeRound?.answer && (room.status === "round_revealed" || room.status === "round_complete")
-          ? `Answer: ${room.activeRound.answer}`
-          : "";
+      if (els.winnerBanner) els.winnerBanner.textContent = winner ? `${winner.name} got it` : "";
+      if (els.answerReveal)
+        els.answerReveal.textContent =
+          room.activeRound?.answer && (room.status === "round_revealed" || room.status === "round_complete")
+            ? `Answer: ${room.activeRound.answer}`
+            : "";
 
-      els.guesses.innerHTML = "";
-      (room.activeRound?.guesses || []).forEach((entry) => {
-        const player = room.players.find((p) => p.id === entry.playerId);
-        const row = document.createElement("div");
-        row.className = "guessRow";
-        const label = document.createElement("div");
-        label.className = "player-label";
-        label.textContent = player?.name || "Player";
-        row.appendChild(label);
-        entry.feedback.forEach((mark, idx) => {
-          const tile = document.createElement("div");
-          tile.className = `tile ${mark}`;
-          tile.textContent = entry.guess[idx];
-          row.appendChild(tile);
+      if (els.guesses) {
+        els.guesses.innerHTML = "";
+        (room.activeRound?.guesses || []).forEach((entry) => {
+          const player = room.players.find((p) => p.id === entry.playerId);
+          const row = document.createElement("div");
+          row.className = "guessRow";
+          const label = document.createElement("div");
+          label.className = "player-label";
+          label.textContent = player?.name || "Player";
+          row.appendChild(label);
+          entry.feedback.forEach((mark, idx) => {
+            const tile = document.createElement("div");
+            tile.className = `tile ${mark}`;
+            tile.textContent = entry.guess[idx];
+            row.appendChild(tile);
+          });
+          els.guesses.appendChild(row);
         });
-        els.guesses.appendChild(row);
-      });
-      els.guesses.lastElementChild?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        els.guesses.scrollTop = els.guesses.scrollHeight;
+      }
     }
 
     renderWordleDraft();
     renderWordleKeyboard(room.activeRound, !hangman && itsMyTurn);
 
-    els.nextGameBtn.disabled = !isHost();
+    if (els.nextGameBtn) els.nextGameBtn.disabled = !isHost();
     const shouldShowStartNext = isHost() && room.status === "round_revealed";
-    els.startNextRoundBtn.classList.toggle("hidden", !shouldShowStartNext);
+    els.startNextRoundBtn?.classList.toggle("hidden", !shouldShowStartNext);
 
     const wEl = document.getElementById("wordleComposer");
     const hEl = document.getElementById("hangmanGuessEntry");
@@ -437,18 +446,24 @@ if (!roomId || !playerId) {
     if (/^[a-z]$/.test(key)) {
       pushWordleLetter(key);
     }
-    if (els.status.getAttribute("data-tone") === "error") {
+    if (els.status?.getAttribute("data-tone") === "error") {
       clearFlash();
     }
   }
 
-  els.wordleKeyboard?.addEventListener("click", (event) => {
-    const btn = event.target.closest(".wordle-key");
-    if (!btn) return;
-    const key = btn.getAttribute("data-key");
-    if (!key) return;
-    void handleWordleKey(key);
-  });
+  els.wordleKeyboard?.addEventListener(
+    "pointerup",
+    (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      const btn = event.target.closest(".wordle-key");
+      if (!btn || btn.disabled) return;
+      event.preventDefault();
+      const key = btn.getAttribute("data-key");
+      if (!key) return;
+      void handleWordleKey(key);
+    },
+    { passive: false },
+  );
 
   window.addEventListener("keydown", (e) => {
     if (isHangman()) return;
@@ -463,6 +478,7 @@ if (!roomId || !playerId) {
   });
 
   async function submitHangmanLetter() {
+    if (!els.hangmanLetter) return;
     const raw = els.hangmanLetter.value.trim().toLowerCase();
     if (raw.length !== 1 || !/[a-z]/.test(raw)) {
       showFlash("One letter A–Z.", true);
@@ -482,20 +498,20 @@ if (!roomId || !playerId) {
     }
   }
 
-  els.hangmanBtn.addEventListener("click", submitHangmanLetter);
-  els.hangmanLetter.addEventListener("keydown", (e) => {
+  els.hangmanBtn?.addEventListener("click", submitHangmanLetter);
+  els.hangmanLetter?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       submitHangmanLetter();
     }
   });
-  els.hangmanLetter.addEventListener("input", () => {
-    if (els.status.getAttribute("data-tone") === "error") {
+  els.hangmanLetter?.addEventListener("input", () => {
+    if (els.status?.getAttribute("data-tone") === "error") {
       clearFlash();
     }
   });
 
-  els.nextGameBtn.addEventListener("click", async () => {
+  els.nextGameBtn?.addEventListener("click", async () => {
     try {
       await api("/api/next-game", "POST", { room_id: roomId, player_id: playerId });
       clearFlash();
@@ -504,7 +520,7 @@ if (!roomId || !playerId) {
       showFlash(error.message, true);
     }
   });
-  els.startNextRoundBtn.addEventListener("click", async () => {
+  els.startNextRoundBtn?.addEventListener("click", async () => {
     try {
       await api("/api/start-next-round", "POST", { room_id: roomId, player_id: playerId });
       clearFlash();
@@ -523,7 +539,7 @@ if (!roomId || !playerId) {
         player_id: playerId,
         text,
       });
-      els.gameChatInput.value = "";
+      if (els.gameChatInput) els.gameChatInput.value = "";
       clearFlash();
       room = await fetchRoom(roomId, playerId);
       renderGame();
